@@ -1,10 +1,10 @@
 {
-  "name": "BaanDee Stock Planner - Google Sheets",
+  "name": "ระบบวางแผนเติมสินค้า BaanDee - Google Sheets",
   "id": "BaanDeeSheetsV1",
   "nodes": [
     {
-      "id": "bee8955d-9f7a-43c7-9869-b46a9a8a4c78",
-      "name": "Planner Webhook",
+      "id": "baa8d87a-56b9-4106-a648-1ba267e7cc81",
+      "name": "รับคำขอจากหน้าเว็บ",
       "type": "n8n-nodes-base.webhook",
       "parameters": {
         "httpMethod": "POST",
@@ -18,11 +18,13 @@
         100
       ],
       "typeVersion": 2,
-      "webhookId": "a61bcd8a-1157-440c-a6e7-41767f9604b5"
+      "webhookId": "96657c87-af73-4c99-9c8a-6fa1e860653d",
+      "notes": "รับคำขอจากหน้าเว็บ โดยตรวจ Header Auth ก่อนทำงาน",
+      "notesInFlow": true
     },
     {
-      "id": "4b38d23d-14d7-4f0c-b36b-b327386eaa6c",
-      "name": "Read products",
+      "id": "a626897c-6a5f-4f20-914c-8a9ec974fded",
+      "name": "อ่านข้อมูลสินค้า",
       "type": "n8n-nodes-base.googleSheets",
       "parameters": {
         "resource": "sheet",
@@ -46,11 +48,13 @@
       "typeVersion": 4.7,
       "alwaysOutputData": true,
       "executeOnce": true,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "notes": "อ่านรหัสและรายละเอียดสินค้า",
+      "notesInFlow": true
     },
     {
-      "id": "bf17fb0b-8905-4779-8628-3ef6771e60e0",
-      "name": "Read inventory",
+      "id": "d8710135-8fcb-44c9-9b11-0fe788c8b7c3",
+      "name": "อ่านข้อมูลสต็อก",
       "type": "n8n-nodes-base.googleSheets",
       "parameters": {
         "resource": "sheet",
@@ -74,11 +78,13 @@
       "typeVersion": 4.7,
       "alwaysOutputData": true,
       "executeOnce": true,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "notes": "อ่านจำนวนคงเหลือและเวลาของข้อมูลสต็อก",
+      "notesInFlow": true
     },
     {
-      "id": "b4b30143-73c6-4dc2-8831-a624f4116273",
-      "name": "Read policies",
+      "id": "c0864e82-28a8-40c3-b387-650bff7ee69a",
+      "name": "อ่านเกณฑ์เติมสินค้า",
       "type": "n8n-nodes-base.googleSheets",
       "parameters": {
         "resource": "sheet",
@@ -102,11 +108,13 @@
       "typeVersion": 4.7,
       "alwaysOutputData": true,
       "executeOnce": true,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "notes": "อ่านขั้นต่ำ เป้าหมาย และระยะเวลารอสินค้า",
+      "notesInFlow": true
     },
     {
-      "id": "79725da0-734a-4eff-b6de-bc292ae167f9",
-      "name": "Read requests",
+      "id": "d6f01059-2f7c-48a7-87d4-4f9db34ee684",
+      "name": "อ่านใบเสนอเดิม",
       "type": "n8n-nodes-base.googleSheets",
       "parameters": {
         "resource": "sheet",
@@ -130,24 +138,28 @@
       "typeVersion": 4.7,
       "alwaysOutputData": true,
       "executeOnce": true,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "notes": "อ่านใบเสนอเดิม เพื่อตรวจรายการซ้ำและข้อมูลล่าสุด",
+      "notesInFlow": true
     },
     {
-      "id": "2b25de54-7ec3-4843-9e95-7b3ed7f01e77",
-      "name": "Validate and Plan",
+      "id": "916262e5-9f4b-465a-91fa-1090f20b471e",
+      "name": "ตรวจข้อมูลและคำนวณแผน",
       "type": "n8n-nodes-base.code",
       "parameters": {
-        "jsCode": "// Shared deterministic business rules. The workflow builder embeds this exact source in n8n.\nconst DEMO_AS_OF = '2026-07-31T09:00:00+07:00';\nconst MAX_AGE_HOURS = 24;\nconst REQUEST_FIELDS = ['request_id','product_id','location_id','quantity','status','reason','actor','revision','created_at','updated_at','evaluated_as_of','evidence_json','idempotency_key','fingerprint'];\nclass DomainError extends Error {\n  constructor(status, code, message) { super(message); this.status=status; this.code=code; }\n}\nfunction normalizeId(value) {\n  const s=String(value ?? '').trim().toUpperCase();\n  if(/^SKU-[A-Z]{2}-\\d{3}$/.test(s)) return s;\n  const match=/^SKU-?(\\d{4})$/.exec(s);\n  return match ? `SKU-${match[1]}` : null;\n}\nfunction integer(value) {\n  if (typeof value === 'boolean' || value == null || String(value).trim()==='') return null;\n  if (!/^\\d+$/.test(String(value).trim())) return null;\n  const n=Number(value);\n  return Number.isSafeInteger(n) ? n : null;\n}\nfunction timestamp(value) {\n  const s=String(value ?? '').trim();\n  if (!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(s)) return NaN;\n  const n=Date.parse(s);\n  // Date.parse normalizes impossible calendar dates; reject them first.\n  const [year,month,day]=s.slice(0,10).split('-').map(Number);\n  if(month<1 || month>12 || day<1 || day>new Date(Date.UTC(year,month,0)).getUTCDate()) return NaN;\n  return n;\n}\nfunction prepareData(raw) {\n  const issues=[];\n  const issue=(source,key,field,before,after,disposition,rule)=>issues.push({source,key,field,before:String(before??''),after:String(after??''),disposition,rule});\n  const categories={'kitchen':'Kitchen','bathroom':'Bathroom','bedding':'Bedding','bed room':'Bedding','storage':'Storage'};\n  const products=[];\n  const groupedProducts=new Map();\n  for(const r of raw.products) {\n    const id=normalizeId(r.product_id);\n    if(!id) { issue('products',r.product_id,'product_id',r.product_id,'','quarantined','invalid_product_id'); continue; }\n    if(!groupedProducts.has(id)) groupedProducts.set(id,[]);\n    groupedProducts.get(id).push(r);\n  }\n  for(const [id,group] of groupedProducts) {\n    if(group.length!==1) { for(const r of group) issue('products',id,'product_id',r.product_id,'','quarantined','duplicate_product_id'); continue; }\n    const r=group[0], category=categories[String(r.category).trim().toLowerCase()];\n    const price=Number(r.unit_price_thb);\n    if(!category || !String(r.product_name??'').trim() || !String(r.unit_price_thb??'').trim() || !Number.isFinite(price) || price<0) {\n      issue('products',id,'record',JSON.stringify(r),'','quarantined','invalid_product_fields'); continue;\n    }\n    if(r.category!==category) issue('products',id,'category',r.category,category,'corrected','explicit_category_dictionary');\n    if(r.product_id!==id) issue('products',id,'product_id',r.product_id,id,'corrected','documented_sku_format');\n    products.push({...r,product_id:id,category,unit_price_thb:price});\n  }\n  const known=new Set(products.map(r=>r.product_id));\n  const inventory=[],invGroups=new Map();\n  for(const r of raw.inventory) {\n    const id=normalizeId(r.product_id), location=String(r.location_id??'').trim();\n    const key=`${id}|${location}`;\n    if(!invGroups.has(key)) invGroups.set(key,[]);\n    invGroups.get(key).push(r);\n  }\n  for(const [key,group] of invGroups) {\n    const r=group[0],id=normalizeId(r.product_id),qty=integer(r.available_qty);\n    if(group.length!==1 || !known.has(id) || r.location_id!=='BKK-DC' || qty===null || !Number.isFinite(timestamp(r.as_of))) {\n      for(const x of group) issue('inventory',key,'record',JSON.stringify(x),'','quarantined',group.length!==1?'duplicate_inventory_key':'invalid_or_orphan_inventory');\n      continue;\n    }\n    inventory.push({...r,product_id:id,available_qty:qty});\n  }\n  const policies=[],policyGroups=new Map();\n  for(const r of raw.policies) {\n    const id=normalizeId(r.product_id);\n    if(!id || !known.has(id)) { issue('policies',r.product_id,'product_id',r.product_id,'','quarantined','unknown_product'); continue; }\n    if(r.product_id!==id) issue('policies',id,'product_id',r.product_id,id,'corrected','documented_sku_format');\n    if(!policyGroups.has(id)) policyGroups.set(id,[]);\n    policyGroups.get(id).push({...r,product_id:id});\n  }\n  for(const [id,group] of policyGroups) {\n    if(group.length!==1) { for(const r of group) issue('policies',id,'record',JSON.stringify(r),'','quarantined','duplicate_policy_requires_review'); continue; }\n    const r=group[0], min=integer(r.minimum_qty),target=integer(r.target_qty),lead=integer(r.lead_time_days);\n    const effective=String(r.effective_from??'');\n    if(min===null || target===null || lead===null || target<min || target>100000 || lead<1 || lead>365 || !/^\\d{4}-\\d{2}-\\d{2}$/.test(effective) || !Number.isFinite(timestamp(`${effective}T00:00:00+07:00`))) {\n      issue('policies',id,'record',JSON.stringify(r),'','quarantined','missing_or_invalid_policy_values'); continue;\n    }\n    policies.push({...r,minimum_qty:min,target_qty:target,lead_time_days:lead});\n  }\n  return {products,inventory,policies,issues,raw_counts:{products:raw.products.length,inventory:raw.inventory.length,policies:raw.policies.length}};\n}\nfunction evaluate(data,input={},now=new Date().toISOString()) {\n  const mode=input.mode??'demo';\n  if(!['demo','live'].includes(mode)) throw new DomainError(422,'invalid_mode','โหมดต้องเป็น demo หรือ live');\n  const asOf=mode==='live'?now:(input.as_of??DEMO_AS_OF), reference=timestamp(asOf);\n  if(!Number.isFinite(reference)) throw new DomainError(422,'invalid_reference_time','วันเวลาต้องเป็น ISO 8601 พร้อมเขตเวลา');\n  const asked=input.product_id?normalizeId(input.product_id):null;\n  if(input.product_id && (!asked || !data.products.some(p=>p.product_id===asked))) throw new DomainError(404,'product_not_found','ไม่พบรหัสสินค้า');\n  const rows=data.products.filter(p=>!asked||p.product_id===asked).map(p=>{\n    const stock=data.inventory.find(s=>s.product_id===p.product_id && s.location_id==='BKK-DC');\n    const policy=data.policies.find(s=>s.product_id===p.product_id);\n    const reasons=[];\n    let age=null;\n    if(!stock) reasons.push('ไม่พบสต็อกที่ผ่านการตรวจสอบ');\n    else {\n      age=(reference-timestamp(stock.as_of))/3600000;\n      if(age<0) reasons.push('เวลาสต็อกอยู่ในอนาคตเมื่อเทียบกับเวลาประเมิน');\n      else if(age>MAX_AGE_HOURS) reasons.push('ข้อมูลสต็อกเก่ากว่า 24 ชั่วโมง');\n    }\n    if(!policy) reasons.push('ไม่มีนโยบายที่ผ่านการตรวจสอบ');\n    else if(reference<timestamp(`${policy.effective_from}T00:00:00+07:00`)) reasons.push('นโยบายยังไม่มีผลในเวลาประเมิน');\n    const state=reasons.length?'review':stock.available_qty<policy.minimum_qty?'needs_replenishment':'sufficient';\n    return {...p,location_id:'BKK-DC',available_qty:stock?.available_qty??null,stock_as_of:stock?.as_of??null,age_hours:age,\n      minimum_qty:policy?.minimum_qty??null,target_qty:policy?.target_qty??null,lead_time_days:policy?.lead_time_days??null,\n      policy_effective_from:policy?.effective_from??null,state,reasons,\n      recommended_qty:reasons.length?null:state==='needs_replenishment'?policy.target_qty-stock.available_qty:0,\n      source_stock:'data/raw/inventory_snapshot.csv',source_policy:'data/generated/replenishment_rules.csv'};\n  });\n  return {mode,evaluated_as_of:asOf,max_age_hours:MAX_AGE_HOURS,rows,\n    summary:{total:rows.length,needs_replenishment:rows.filter(r=>r.state==='needs_replenishment').length,sufficient:rows.filter(r=>r.state==='sufficient').length,review:rows.filter(r=>r.state==='review').length},\n    quality:{raw_counts:data.raw_counts,clean_counts:{products:data.products.length,inventory:data.inventory.length,policies:data.policies.length},issues:data.issues}};\n}\nfunction planAction(input,data,existing=[],now=new Date().toISOString(),newId=`REQ-${Date.now()}`) {\n  const success=(result,write=null,status=200)=>({ok:true,http_status:status,result,write});\n  const action=input.action??'evaluate';\n  if(action==='evaluate') return success(evaluate(data,input,now));\n  if(action==='list') return success({requests:existing.map(r=>({...r,revision:Number(r.revision),quantity:Number(r.quantity)})).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)))});\n  if(action==='get') {\n    const r=existing.find(r=>r.request_id===input.request_id);\n    if(!r) throw new DomainError(404,'request_not_found','ไม่พบใบเสนอ');\n    return success({request:r});\n  }\n  if(!['create','update'].includes(action)) throw new DomainError(422,'unknown_action','ไม่รองรับคำสั่งนี้');\n  const quantity=integer(input.quantity);\n  if(quantity===null || quantity<1 || quantity>100000) throw new DomainError(422,'invalid_quantity','จำนวนต้องเป็นจำนวนเต็ม 1–100000 ชิ้น');\n  const actor=String(input.actor??'').trim(),reason=String(input.reason??'').trim();\n  if(!actor || actor.length>80 || reason.length>1000) throw new DomainError(422,'invalid_details','ระบุผู้ทำรายการไม่เกิน 80 ตัวอักษร และเหตุผลไม่เกิน 1000 ตัวอักษร');\n  if(action==='create') {\n    const key=String(input.idempotency_key??'');\n    if(!/^[A-Za-z0-9_-]{8,100}$/.test(key)) throw new DomainError(422,'invalid_idempotency_key','ต้องมีรหัสป้องกันการส่งซ้ำ');\n    const fingerprint=JSON.stringify([normalizeId(input.product_id),quantity,actor,reason,input.mode??'demo',input.as_of??DEMO_AS_OF]);\n    const replay=existing.find(r=>r.idempotency_key===key);\n    if(replay) {\n      if(replay.fingerprint!==fingerprint) throw new DomainError(409,'idempotency_conflict','รหัสส่งซ้ำถูกใช้กับข้อมูลคนละชุด');\n      return success({request:replay,replayed:true});\n    }\n    if(!input.product_id) throw new DomainError(422,'product_required','ต้องเลือกรหัสสินค้า');\n    const e=evaluate(data,input,now),r=e.rows[0];\n    if(r.state!=='needs_replenishment') throw new DomainError(422,'cannot_replenish',r.state==='review'?r.reasons.join('; '):'สินค้ายังไม่ต่ำกว่าเกณฑ์');\n    if(existing.some(x=>x.product_id===r.product_id && x.location_id===r.location_id && x.status!=='cancelled')) throw new DomainError(409,'duplicate_active_request','มีใบเสนอของสินค้านี้อยู่แล้ว กรุณาเปิดรายการเดิม');\n    if(quantity!==r.recommended_qty && !reason) throw new DomainError(422,'override_reason_required','ถ้าเปลี่ยนจำนวนจากคำแนะนำ ต้องระบุเหตุผล');\n    const row={request_id:newId,product_id:r.product_id,location_id:r.location_id,quantity,status:'draft',reason,actor,revision:1,created_at:now,updated_at:now,\n      evaluated_as_of:e.evaluated_as_of,evidence_json:JSON.stringify(r),idempotency_key:key,fingerprint};\n    return success({request:row,replayed:false},{type:'append',row},201);\n  }\n  const previous=existing.find(r=>r.request_id===input.request_id);\n  if(!previous) throw new DomainError(404,'request_not_found','ไม่พบใบเสนอ');\n  if(integer(input.revision)!==Number(previous.revision)) throw new DomainError(409,'revision_conflict','รายการเปลี่ยนแล้ว กรุณาเปิดข้อมูลล่าสุดก่อนบันทึก');\n  const transitions={draft:['draft','submitted','cancelled'],submitted:['submitted','draft','approved','cancelled']};\n  const status=String(input.status??previous.status);\n  if(!transitions[previous.status]?.includes(status)) throw new DomainError(409,'invalid_transition','สถานะนี้แก้ไขไม่ได้ หรือการเปลี่ยนสถานะไม่ถูกต้อง');\n  let evidence=previous.evidence_json,asOf=previous.evaluated_as_of;\n  if(status!=='cancelled') {\n    const e=evaluate(data,{...input,product_id:previous.product_id},now),r=e.rows[0];\n    if(r.state!=='needs_replenishment') throw new DomainError(422,'cannot_replenish','ข้อมูลล่าสุดไม่พร้อมให้เสนอเติม กรุณาตรวจสอบ');\n    if(quantity!==r.recommended_qty && !reason) throw new DomainError(422,'override_reason_required','ถ้าเปลี่ยนจำนวนจากคำแนะนำ ต้องระบุเหตุผล');\n    evidence=JSON.stringify(r); asOf=e.evaluated_as_of;\n  } else if(!reason) throw new DomainError(422,'cancel_reason_required','กรุณาระบุเหตุผลยกเลิก');\n  const row={...previous,quantity,status,reason,actor,revision:Number(previous.revision)+1,updated_at:now,evaluated_as_of:asOf,evidence_json:evidence};\n  return success({request:row},{type:'update',row,expected_revision:Number(previous.revision)});\n}\nfunction safePlan(input,data,existing,now,newId) {\n  try { return planAction(input,data,existing,now,newId); }\n  catch(e) { if(!(e instanceof DomainError)) throw e; return {ok:false,http_status:e.status,error:{code:e.code,message:e.message},write:null}; }\n}\n\nconst rows=name=>$(name).all().map(i=>i.json);\nif(['Read products','Read inventory','Read policies','Read requests'].some(name=>rows(name).some(r=>r.error))) return [{json:{ok:false,http_status:503,error:{code:'source_unavailable',message:'อ่านแหล่งข้อมูลไม่สำเร็จ ยังไม่สร้างหรือแก้ไขใบเสนอ'}}}];\nconst raw={products:rows('Read products').filter(r=>r.product_id),inventory:rows('Read inventory').filter(r=>r.product_id),policies:rows('Read policies').filter(r=>r.product_id)};\nif(!raw.products.length||!raw.inventory.length) return [{json:{ok:false,http_status:503,error:{code:'empty_source',message:'แหล่งข้อมูลสินค้า/สต็อกว่าง กรุณาตรวจสอบ'}}}];\nconst data=prepareData(raw),existing=rows('Read requests').filter(r=>r.request_id);\nconst input=$('Planner Webhook').first().json.body??{};\nconst planned=safePlan(input,data,existing,new Date().toISOString(),'REQ-'+$execution.id+'-'+Date.now());\nreturn [{json:planned}];"
+        "jsCode": "// Shared deterministic business rules. The workflow builder embeds this exact source in n8n.\nconst DEMO_AS_OF = '2026-07-31T09:00:00+07:00';\nconst MAX_AGE_HOURS = 24;\nconst REQUEST_FIELDS = ['request_id','product_id','location_id','quantity','status','reason','actor','revision','created_at','updated_at','evaluated_as_of','evidence_json','idempotency_key','fingerprint'];\nclass DomainError extends Error {\n  constructor(status, code, message) { super(message); this.status=status; this.code=code; }\n}\nfunction normalizeId(value) {\n  const s=String(value ?? '').trim().toUpperCase();\n  if(/^SKU-[A-Z]{2}-\\d{3}$/.test(s)) return s;\n  const match=/^SKU-?(\\d{4})$/.exec(s);\n  return match ? `SKU-${match[1]}` : null;\n}\nfunction integer(value) {\n  if (typeof value === 'boolean' || value == null || String(value).trim()==='') return null;\n  if (!/^\\d+$/.test(String(value).trim())) return null;\n  const n=Number(value);\n  return Number.isSafeInteger(n) ? n : null;\n}\nfunction timestamp(value) {\n  const s=String(value ?? '').trim();\n  if (!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(s)) return NaN;\n  const n=Date.parse(s);\n  // Date.parse normalizes impossible calendar dates; reject them first.\n  const [year,month,day]=s.slice(0,10).split('-').map(Number);\n  if(month<1 || month>12 || day<1 || day>new Date(Date.UTC(year,month,0)).getUTCDate()) return NaN;\n  return n;\n}\nfunction prepareData(raw) {\n  const issues=[];\n  const issue=(source,key,field,before,after,disposition,rule)=>issues.push({source,key,field,before:String(before??''),after:String(after??''),disposition,rule});\n  const categories={'kitchen':'Kitchen','bathroom':'Bathroom','bedding':'Bedding','bed room':'Bedding','storage':'Storage'};\n  const products=[];\n  const groupedProducts=new Map();\n  for(const r of raw.products) {\n    const id=normalizeId(r.product_id);\n    if(!id) { issue('products',r.product_id,'product_id',r.product_id,'','quarantined','invalid_product_id'); continue; }\n    if(!groupedProducts.has(id)) groupedProducts.set(id,[]);\n    groupedProducts.get(id).push(r);\n  }\n  for(const [id,group] of groupedProducts) {\n    if(group.length!==1) { for(const r of group) issue('products',id,'product_id',r.product_id,'','quarantined','duplicate_product_id'); continue; }\n    const r=group[0], category=categories[String(r.category).trim().toLowerCase()];\n    const price=Number(r.unit_price_thb);\n    if(!category || !String(r.product_name??'').trim() || !String(r.unit_price_thb??'').trim() || !Number.isFinite(price) || price<0) {\n      issue('products',id,'record',JSON.stringify(r),'','quarantined','invalid_product_fields'); continue;\n    }\n    if(r.category!==category) issue('products',id,'category',r.category,category,'corrected','explicit_category_dictionary');\n    if(r.product_id!==id) issue('products',id,'product_id',r.product_id,id,'corrected','documented_sku_format');\n    products.push({...r,product_id:id,category,unit_price_thb:price});\n  }\n  const known=new Set(products.map(r=>r.product_id));\n  const inventory=[],invGroups=new Map();\n  for(const r of raw.inventory) {\n    const id=normalizeId(r.product_id), location=String(r.location_id??'').trim();\n    const key=`${id}|${location}`;\n    if(!invGroups.has(key)) invGroups.set(key,[]);\n    invGroups.get(key).push(r);\n  }\n  for(const [key,group] of invGroups) {\n    const r=group[0],id=normalizeId(r.product_id),qty=integer(r.available_qty);\n    if(group.length!==1 || !known.has(id) || r.location_id!=='BKK-DC' || qty===null || !Number.isFinite(timestamp(r.as_of))) {\n      for(const x of group) issue('inventory',key,'record',JSON.stringify(x),'','quarantined',group.length!==1?'duplicate_inventory_key':'invalid_or_orphan_inventory');\n      continue;\n    }\n    inventory.push({...r,product_id:id,available_qty:qty});\n  }\n  const policies=[],policyGroups=new Map();\n  for(const r of raw.policies) {\n    const id=normalizeId(r.product_id);\n    if(!id || !known.has(id)) { issue('policies',r.product_id,'product_id',r.product_id,'','quarantined','unknown_product'); continue; }\n    if(r.product_id!==id) issue('policies',id,'product_id',r.product_id,id,'corrected','documented_sku_format');\n    if(!policyGroups.has(id)) policyGroups.set(id,[]);\n    policyGroups.get(id).push({...r,product_id:id});\n  }\n  for(const [id,group] of policyGroups) {\n    if(group.length!==1) { for(const r of group) issue('policies',id,'record',JSON.stringify(r),'','quarantined','duplicate_policy_requires_review'); continue; }\n    const r=group[0], min=integer(r.minimum_qty),target=integer(r.target_qty),lead=integer(r.lead_time_days);\n    const effective=String(r.effective_from??'');\n    if(min===null || target===null || lead===null || target<min || target>100000 || lead<1 || lead>365 || !/^\\d{4}-\\d{2}-\\d{2}$/.test(effective) || !Number.isFinite(timestamp(`${effective}T00:00:00+07:00`))) {\n      issue('policies',id,'record',JSON.stringify(r),'','quarantined','missing_or_invalid_policy_values'); continue;\n    }\n    policies.push({...r,minimum_qty:min,target_qty:target,lead_time_days:lead});\n  }\n  return {products,inventory,policies,issues,raw_counts:{products:raw.products.length,inventory:raw.inventory.length,policies:raw.policies.length}};\n}\nfunction evaluate(data,input={},now=new Date().toISOString()) {\n  const mode=input.mode??'demo';\n  if(!['demo','live'].includes(mode)) throw new DomainError(422,'invalid_mode','โหมดต้องเป็น demo หรือ live');\n  const asOf=mode==='live'?now:(input.as_of??DEMO_AS_OF), reference=timestamp(asOf);\n  if(!Number.isFinite(reference)) throw new DomainError(422,'invalid_reference_time','วันเวลาต้องเป็น ISO 8601 พร้อมเขตเวลา');\n  const asked=input.product_id?normalizeId(input.product_id):null;\n  if(input.product_id && (!asked || !data.products.some(p=>p.product_id===asked))) throw new DomainError(404,'product_not_found','ไม่พบรหัสสินค้า');\n  const rows=data.products.filter(p=>!asked||p.product_id===asked).map(p=>{\n    const stock=data.inventory.find(s=>s.product_id===p.product_id && s.location_id==='BKK-DC');\n    const policy=data.policies.find(s=>s.product_id===p.product_id);\n    const reasons=[];\n    let age=null;\n    if(!stock) reasons.push('ไม่พบสต็อกที่ผ่านการตรวจสอบ');\n    else {\n      age=(reference-timestamp(stock.as_of))/3600000;\n      if(age<0) reasons.push('เวลาสต็อกอยู่ในอนาคตเมื่อเทียบกับเวลาประเมิน');\n      else if(age>MAX_AGE_HOURS) reasons.push('ข้อมูลสต็อกเก่ากว่า 24 ชั่วโมง');\n    }\n    if(!policy) reasons.push('ไม่มีนโยบายที่ผ่านการตรวจสอบ');\n    else if(reference<timestamp(`${policy.effective_from}T00:00:00+07:00`)) reasons.push('นโยบายยังไม่มีผลในเวลาประเมิน');\n    const state=reasons.length?'review':stock.available_qty<policy.minimum_qty?'needs_replenishment':'sufficient';\n    return {...p,location_id:'BKK-DC',available_qty:stock?.available_qty??null,stock_as_of:stock?.as_of??null,age_hours:age,\n      minimum_qty:policy?.minimum_qty??null,target_qty:policy?.target_qty??null,lead_time_days:policy?.lead_time_days??null,\n      policy_effective_from:policy?.effective_from??null,state,reasons,\n      recommended_qty:reasons.length?null:state==='needs_replenishment'?policy.target_qty-stock.available_qty:0,\n      source_stock:'data/raw/inventory_snapshot.csv',source_policy:'data/generated/replenishment_rules.csv'};\n  });\n  return {mode,evaluated_as_of:asOf,max_age_hours:MAX_AGE_HOURS,rows,\n    summary:{total:rows.length,needs_replenishment:rows.filter(r=>r.state==='needs_replenishment').length,sufficient:rows.filter(r=>r.state==='sufficient').length,review:rows.filter(r=>r.state==='review').length},\n    quality:{raw_counts:data.raw_counts,clean_counts:{products:data.products.length,inventory:data.inventory.length,policies:data.policies.length},issues:data.issues}};\n}\nfunction planAction(input,data,existing=[],now=new Date().toISOString(),newId=`REQ-${Date.now()}`) {\n  const success=(result,write=null,status=200)=>({ok:true,http_status:status,result,write});\n  const action=input.action??'evaluate';\n  if(action==='evaluate') return success(evaluate(data,input,now));\n  if(action==='list') return success({requests:existing.map(r=>({...r,revision:Number(r.revision),quantity:Number(r.quantity)})).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)))});\n  if(action==='get') {\n    const r=existing.find(r=>r.request_id===input.request_id);\n    if(!r) throw new DomainError(404,'request_not_found','ไม่พบใบเสนอ');\n    return success({request:r});\n  }\n  if(!['create','update'].includes(action)) throw new DomainError(422,'unknown_action','ไม่รองรับคำสั่งนี้');\n  const quantity=integer(input.quantity);\n  if(quantity===null || quantity<1 || quantity>100000) throw new DomainError(422,'invalid_quantity','จำนวนต้องเป็นจำนวนเต็ม 1–100000 ชิ้น');\n  const actor=String(input.actor??'').trim(),reason=String(input.reason??'').trim();\n  if(!actor || actor.length>80 || reason.length>1000) throw new DomainError(422,'invalid_details','ระบุผู้ทำรายการไม่เกิน 80 ตัวอักษร และเหตุผลไม่เกิน 1000 ตัวอักษร');\n  if(action==='create') {\n    const key=String(input.idempotency_key??'');\n    if(!/^[A-Za-z0-9_-]{8,100}$/.test(key)) throw new DomainError(422,'invalid_idempotency_key','ต้องมีรหัสป้องกันการส่งซ้ำ');\n    const fingerprint=JSON.stringify([normalizeId(input.product_id),quantity,actor,reason,input.mode??'demo',input.as_of??DEMO_AS_OF]);\n    const replay=existing.find(r=>r.idempotency_key===key);\n    if(replay) {\n      if(replay.fingerprint!==fingerprint) throw new DomainError(409,'idempotency_conflict','รหัสส่งซ้ำถูกใช้กับข้อมูลคนละชุด');\n      return success({request:replay,replayed:true});\n    }\n    if(!input.product_id) throw new DomainError(422,'product_required','ต้องเลือกรหัสสินค้า');\n    const e=evaluate(data,input,now),r=e.rows[0];\n    if(r.state!=='needs_replenishment') throw new DomainError(422,'cannot_replenish',r.state==='review'?r.reasons.join('; '):'สินค้ายังไม่ต่ำกว่าเกณฑ์');\n    if(existing.some(x=>x.product_id===r.product_id && x.location_id===r.location_id && x.status!=='cancelled')) throw new DomainError(409,'duplicate_active_request','มีใบเสนอของสินค้านี้อยู่แล้ว กรุณาเปิดรายการเดิม');\n    if(quantity!==r.recommended_qty && !reason) throw new DomainError(422,'override_reason_required','ถ้าเปลี่ยนจำนวนจากคำแนะนำ ต้องระบุเหตุผล');\n    const row={request_id:newId,product_id:r.product_id,location_id:r.location_id,quantity,status:'draft',reason,actor,revision:1,created_at:now,updated_at:now,\n      evaluated_as_of:e.evaluated_as_of,evidence_json:JSON.stringify(r),idempotency_key:key,fingerprint};\n    return success({request:row,replayed:false},{type:'append',row},201);\n  }\n  const previous=existing.find(r=>r.request_id===input.request_id);\n  if(!previous) throw new DomainError(404,'request_not_found','ไม่พบใบเสนอ');\n  if(integer(input.revision)!==Number(previous.revision)) throw new DomainError(409,'revision_conflict','รายการเปลี่ยนแล้ว กรุณาเปิดข้อมูลล่าสุดก่อนบันทึก');\n  const transitions={draft:['draft','submitted','cancelled'],submitted:['submitted','draft','approved','cancelled']};\n  const status=String(input.status??previous.status);\n  if(!transitions[previous.status]?.includes(status)) throw new DomainError(409,'invalid_transition','สถานะนี้แก้ไขไม่ได้ หรือการเปลี่ยนสถานะไม่ถูกต้อง');\n  let evidence=previous.evidence_json,asOf=previous.evaluated_as_of;\n  if(status!=='cancelled') {\n    const e=evaluate(data,{...input,product_id:previous.product_id},now),r=e.rows[0];\n    if(r.state!=='needs_replenishment') throw new DomainError(422,'cannot_replenish','ข้อมูลล่าสุดไม่พร้อมให้เสนอเติม กรุณาตรวจสอบ');\n    if(quantity!==r.recommended_qty && !reason) throw new DomainError(422,'override_reason_required','ถ้าเปลี่ยนจำนวนจากคำแนะนำ ต้องระบุเหตุผล');\n    evidence=JSON.stringify(r); asOf=e.evaluated_as_of;\n  } else if(!reason) throw new DomainError(422,'cancel_reason_required','กรุณาระบุเหตุผลยกเลิก');\n  const row={...previous,quantity,status,reason,actor,revision:Number(previous.revision)+1,updated_at:now,evaluated_as_of:asOf,evidence_json:evidence};\n  return success({request:row},{type:'update',row,expected_revision:Number(previous.revision)});\n}\nfunction safePlan(input,data,existing,now,newId) {\n  try { return planAction(input,data,existing,now,newId); }\n  catch(e) { if(!(e instanceof DomainError)) throw e; return {ok:false,http_status:e.status,error:{code:e.code,message:e.message},write:null}; }\n}\n\nconst rows=name=>$(name).all().map(i=>i.json);\nif(['อ่านข้อมูลสินค้า','อ่านข้อมูลสต็อก','อ่านเกณฑ์เติมสินค้า','อ่านใบเสนอเดิม'].some(name=>rows(name).some(r=>r.error))) return [{json:{ok:false,http_status:503,error:{code:'source_unavailable',message:'อ่านแหล่งข้อมูลไม่สำเร็จ ยังไม่สร้างหรือแก้ไขใบเสนอ'}}}];\nconst raw={products:rows('อ่านข้อมูลสินค้า').filter(r=>r.product_id),inventory:rows('อ่านข้อมูลสต็อก').filter(r=>r.product_id),policies:rows('อ่านเกณฑ์เติมสินค้า').filter(r=>r.product_id)};\nif(!raw.products.length||!raw.inventory.length) return [{json:{ok:false,http_status:503,error:{code:'empty_source',message:'แหล่งข้อมูลสินค้า/สต็อกว่าง กรุณาตรวจสอบ'}}}];\nconst data=prepareData(raw),existing=rows('อ่านใบเสนอเดิม').filter(r=>r.request_id);\nconst input=$('รับคำขอจากหน้าเว็บ').first().json.body??{};\nconst planned=safePlan(input,data,existing,new Date().toISOString(),'REQ-'+$execution.id+'-'+Date.now());\nreturn [{json:planned}];"
       },
       "position": [
         1090,
         100
       ],
-      "typeVersion": 2
+      "typeVersion": 2,
+      "notes": "ตรวจคุณภาพข้อมูล ใช้กฎคำนวณ และเตรียมผลหรือรายการเขียน",
+      "notesInFlow": true
     },
     {
-      "id": "d9079963-11d9-44c1-b04c-ff4ddce527dc",
-      "name": "Needs Write",
+      "id": "592b3429-137a-4f9e-8fc9-35cfbfa75a27",
+      "name": "คำขอต้องบันทึกหรือไม่",
       "type": "n8n-nodes-base.if",
       "parameters": {
         "conditions": {
@@ -159,7 +171,7 @@
           },
           "conditions": [
             {
-              "id": "eafa6bc3-04a3-4cd1-b202-4f2809629008",
+              "id": "0a91fcdd-2e9a-4468-bf5a-5c5cdacb2f43",
               "leftValue": "={{ !!$json.write }}",
               "rightValue": true,
               "operator": {
@@ -177,11 +189,13 @@
         1290,
         100
       ],
-      "typeVersion": 2.2
+      "typeVersion": 2.2,
+      "notes": "แยกคำขออ่านอย่างเดียวออกจากคำขอสร้างหรือแก้ไข",
+      "notesInFlow": true
     },
     {
-      "id": "67640807-13c8-4e3e-9a19-0aba665de6ba",
-      "name": "Respond",
+      "id": "161eee18-8ada-42e8-9ac8-b4d93e3688e5",
+      "name": "ส่งผลกลับหน้าเว็บ",
       "type": "n8n-nodes-base.respondToWebhook",
       "parameters": {
         "respondWith": "json",
@@ -194,24 +208,28 @@
         1740,
         100
       ],
-      "typeVersion": 1.4
+      "typeVersion": 1.4,
+      "notes": "ส่งผลและสถานะกลับให้หน้าเว็บ",
+      "notesInFlow": true
     },
     {
-      "id": "07e81da3-9e89-4351-af10-598d80432a54",
-      "name": "Write Row",
+      "id": "49dd0044-db1b-48fa-8ce5-702dc0c654ff",
+      "name": "เตรียมแถวสำหรับบันทึก",
       "type": "n8n-nodes-base.code",
       "parameters": {
-        "jsCode": "return [{json:$('Validate and Plan').first().json.write.row}];"
+        "jsCode": "return [{json:$('ตรวจข้อมูลและคำนวณแผน').first().json.write.row}];"
       },
       "position": [
         1300,
         350
       ],
-      "typeVersion": 2
+      "typeVersion": 2,
+      "notes": "ส่งเฉพาะแถวใบเสนอที่ผ่านการตรวจไปยังขั้นตอนบันทึก",
+      "notesInFlow": true
     },
     {
-      "id": "10346b32-ea8d-4fbd-b2c2-187d2bfd6273",
-      "name": "Is New",
+      "id": "392896c1-299c-40a3-966b-179feafe2808",
+      "name": "เป็นใบเสนอใหม่หรือไม่",
       "type": "n8n-nodes-base.if",
       "parameters": {
         "conditions": {
@@ -223,8 +241,8 @@
           },
           "conditions": [
             {
-              "id": "690f0844-1794-475e-b9f3-019f5fbb8712",
-              "leftValue": "={{ $('Validate and Plan').first().json.write.type === 'append' }}",
+              "id": "15d88b9c-801d-401c-a1ca-b780b1fe37da",
+              "leftValue": "={{ $('ตรวจข้อมูลและคำนวณแผน').first().json.write.type === 'append' }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -241,11 +259,13 @@
         1510,
         350
       ],
-      "typeVersion": 2.2
+      "typeVersion": 2.2,
+      "notes": "เลือกเพิ่มแถวใหม่หรือแก้แถวเดิมตาม request_id",
+      "notesInFlow": true
     },
     {
-      "id": "ecd59c56-c874-4049-b364-c737f6768637",
-      "name": "Create Proposal",
+      "id": "43f3c0c3-1a9a-4a80-9650-902cbe350a90",
+      "name": "สร้างใบเสนอเติมสินค้า",
       "type": "n8n-nodes-base.googleSheets",
       "parameters": {
         "resource": "sheet",
@@ -419,11 +439,13 @@
         300
       ],
       "typeVersion": 4.7,
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "เพิ่มใบเสนอใหม่ลงแท็บ requests",
+      "notesInFlow": true
     },
     {
-      "id": "f07ea0a1-1579-42fd-97e8-0c4af6f24721",
-      "name": "Update Proposal",
+      "id": "bfb8312e-08a4-4f37-8b73-5355f77595f4",
+      "name": "แก้ไขใบเสนอเติมสินค้า",
       "type": "n8n-nodes-base.googleSheets",
       "parameters": {
         "resource": "sheet",
@@ -599,11 +621,13 @@
         520
       ],
       "typeVersion": 4.7,
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "แก้ไขแถวเดิมในแท็บ requests โดยใช้ request_id",
+      "notesInFlow": true
     },
     {
-      "id": "0d6ac6ae-3906-4b9b-b961-6618ddf54b09",
-      "name": "Read Saved Proposal",
+      "id": "d11d2e95-1e4c-4e60-874f-06cb194f6050",
+      "name": "อ่านใบเสนอที่บันทึกแล้ว",
       "type": "n8n-nodes-base.googleSheets",
       "parameters": {
         "resource": "sheet",
@@ -627,24 +651,28 @@
       "typeVersion": 4.7,
       "alwaysOutputData": true,
       "executeOnce": true,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "notes": "อ่านแถวที่เพิ่งบันทึกกลับมาตรวจสอบ",
+      "notesInFlow": true
     },
     {
-      "id": "b1b07386-88d2-43c4-86e5-7211712b20e0",
-      "name": "Verify Readback",
+      "id": "bf3f302b-44ee-4790-b87f-2fd19fbe5bf2",
+      "name": "ยืนยันผลการบันทึก",
       "type": "n8n-nodes-base.code",
       "parameters": {
-        "jsCode": "const p=$('Validate and Plan').first().json,expected=p.write.row;\nconst found=$input.all().map(i=>i.json).filter(r=>r.request_id===expected.request_id);\nif(found.length!==1||Number(found[0].quantity)!==Number(expected.quantity)||Number(found[0].revision)!==Number(expected.revision)||found[0].status!==expected.status) return [{json:{ok:false,http_status:503,error:{code:'readback_failed',message:'ยังยืนยันผลบันทึกไม่ได้ กรุณาค้นหารายการก่อนลองใหม่'}}}];\nreturn [{json:{ok:true,http_status:p.http_status,result:{...p.result,request:found[0],readback_verified:true}}}];"
+        "jsCode": "const p=$('ตรวจข้อมูลและคำนวณแผน').first().json,expected=p.write.row;\nconst found=$input.all().map(i=>i.json).filter(r=>r.request_id===expected.request_id);\nif(found.length!==1||Number(found[0].quantity)!==Number(expected.quantity)||Number(found[0].revision)!==Number(expected.revision)||found[0].status!==expected.status) return [{json:{ok:false,http_status:503,error:{code:'readback_failed',message:'ยังยืนยันผลบันทึกไม่ได้ กรุณาค้นหารายการก่อนลองใหม่'}}}];\nreturn [{json:{ok:true,http_status:p.http_status,result:{...p.result,request:found[0],readback_verified:true}}}];"
       },
       "position": [
         2160,
         350
       ],
-      "typeVersion": 2
+      "typeVersion": 2,
+      "notes": "ยืนยันจำนวน สถานะ และ revision ก่อนตอบว่าสำเร็จ",
+      "notesInFlow": true
     },
     {
-      "id": "04e4516f-1900-4230-826a-ed91206b0377",
-      "name": "Service Unavailable",
+      "id": "9a0bff96-2ec0-4623-a80a-0654782fc27b",
+      "name": "แจ้งบริการไม่พร้อม",
       "type": "n8n-nodes-base.code",
       "parameters": {
         "jsCode": "return [{json:{ok:false,http_status:503,error:{code:'service_unavailable',message:'เชื่อมต่อแหล่งข้อมูลหรือบันทึกไม่สำเร็จ ยังยืนยันผลไม่ได้ กรุณาค้นหารายการก่อนลองใหม่'}}}];"
@@ -653,14 +681,16 @@
         1300,
         -180
       ],
-      "typeVersion": 2
+      "typeVersion": 2,
+      "notes": "ส่งข้อความปลอดภัยเมื่อบริการหรือการบันทึกไม่พร้อม",
+      "notesInFlow": true
     },
     {
-      "id": "932ae9d8-8366-4277-a297-a578f69aaf18",
-      "name": "Read Me",
+      "id": "99518d08-766a-4d1c-987d-adffba0ea0b7",
+      "name": "คู่มือการตั้งค่า",
       "type": "n8n-nodes-base.stickyNote",
       "parameters": {
-        "content": "## BaanDee Stock Planner\n1. Import the four CSV tabs into Google Sheets.\n2. Set Spreadsheet ID on all Google Sheets nodes.\n3. Select your existing Google Sheets credential on all nodes.\n4. Use a protected webhook before public use.\n5. Publish and set N8N_WEBHOOK_URL on the local UI.\nSingle-operator prototype: Sheets writes are not atomic.\nBusiness rules are generated from src/core.mjs; do not edit only the embedded copy.",
+        "content": "## ระบบวางแผนเติมสินค้า BaanDee\n1. นำเข้า CSV 4 ตารางลง Google Sheets: products, inventory, policies, requests\n2. ตั้ง Spreadsheet ID และเลือกบัญชี Google ที่มีสิทธิ์ใน node อ่าน/เขียนทุกจุด\n3. ตั้ง Header Auth ชื่อ X-Planner-Key และเก็บ token เป็นความลับ\n4. ตรวจ Production URL แล้วตั้ง N8N_WEBHOOK_URL ใน .env.local\n5. กด Publish หลังตรวจ node และข้อมูลเชื่อมต่อครบ\nระบบเป็นต้นแบบใช้ข้อมูลย้อนหลังและกฎที่ตรวจสอบได้ ไม่สั่งซื้อจริง\nผู้ใช้ทีละคน: Google Sheets ไม่มี transaction สำหรับคำขอพร้อมกัน\nกฎคำนวณอ้างอิง src/core.mjs; อย่าแก้เฉพาะโค้ดที่ฝังใน workflow",
         "height": 330,
         "width": 470
       },
@@ -672,182 +702,182 @@
     }
   ],
   "connections": {
-    "Planner Webhook": {
+    "รับคำขอจากหน้าเว็บ": {
       "main": [
         [
           {
-            "node": "Read products",
+            "node": "อ่านข้อมูลสินค้า",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Read products": {
+    "อ่านข้อมูลสินค้า": {
       "main": [
         [
           {
-            "node": "Read inventory",
+            "node": "อ่านข้อมูลสต็อก",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Read inventory": {
+    "อ่านข้อมูลสต็อก": {
       "main": [
         [
           {
-            "node": "Read policies",
+            "node": "อ่านเกณฑ์เติมสินค้า",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Read policies": {
+    "อ่านเกณฑ์เติมสินค้า": {
       "main": [
         [
           {
-            "node": "Read requests",
+            "node": "อ่านใบเสนอเดิม",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Read requests": {
+    "อ่านใบเสนอเดิม": {
       "main": [
         [
           {
-            "node": "Validate and Plan",
+            "node": "ตรวจข้อมูลและคำนวณแผน",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate and Plan": {
+    "ตรวจข้อมูลและคำนวณแผน": {
       "main": [
         [
           {
-            "node": "Needs Write",
+            "node": "คำขอต้องบันทึกหรือไม่",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Needs Write": {
+    "คำขอต้องบันทึกหรือไม่": {
       "main": [
         [
           {
-            "node": "Write Row",
+            "node": "เตรียมแถวสำหรับบันทึก",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Respond",
+            "node": "ส่งผลกลับหน้าเว็บ",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Write Row": {
+    "เตรียมแถวสำหรับบันทึก": {
       "main": [
         [
           {
-            "node": "Is New",
+            "node": "เป็นใบเสนอใหม่หรือไม่",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Is New": {
+    "เป็นใบเสนอใหม่หรือไม่": {
       "main": [
         [
           {
-            "node": "Create Proposal",
+            "node": "สร้างใบเสนอเติมสินค้า",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Update Proposal",
+            "node": "แก้ไขใบเสนอเติมสินค้า",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Create Proposal": {
+    "สร้างใบเสนอเติมสินค้า": {
       "main": [
         [
           {
-            "node": "Read Saved Proposal",
+            "node": "อ่านใบเสนอที่บันทึกแล้ว",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Service Unavailable",
+            "node": "แจ้งบริการไม่พร้อม",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Update Proposal": {
+    "แก้ไขใบเสนอเติมสินค้า": {
       "main": [
         [
           {
-            "node": "Read Saved Proposal",
+            "node": "อ่านใบเสนอที่บันทึกแล้ว",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Service Unavailable",
+            "node": "แจ้งบริการไม่พร้อม",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Read Saved Proposal": {
+    "อ่านใบเสนอที่บันทึกแล้ว": {
       "main": [
         [
           {
-            "node": "Verify Readback",
+            "node": "ยืนยันผลการบันทึก",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Verify Readback": {
+    "ยืนยันผลการบันทึก": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "ส่งผลกลับหน้าเว็บ",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Service Unavailable": {
+    "แจ้งบริการไม่พร้อม": {
       "main": [
         [
           {
-            "node": "Respond",
+            "node": "ส่งผลกลับหน้าเว็บ",
             "type": "main",
             "index": 0
           }
@@ -863,6 +893,6 @@
     "saveExecutionProgress": false
   },
   "pinData": {},
-  "versionId": "05186ce2-0907-4187-ba1f-da8ebe88bc68",
+  "versionId": "b1fec56e-b815-447b-a702-e0ebe2724973",
   "tags": []
 }

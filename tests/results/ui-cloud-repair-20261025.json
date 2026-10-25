@@ -1,0 +1,14 @@
+{
+  "tested_at": "2026-10-25T12:51:43.893Z",
+  "transport": "Web UI to n8n Cloud to Google Sheets",
+  "read_http_status": 200,
+  "ui_request": {
+    "request_id": "REQ-123-1792932343640",
+    "product_id": "SKU-0011",
+    "quantity": 20,
+    "status": "cancelled",
+    "revision": 3
+  },
+  "active_test_requests": 0,
+  "result": "PASS"
+}

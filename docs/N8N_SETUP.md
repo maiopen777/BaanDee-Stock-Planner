@@ -26,7 +26,7 @@
 
 ## 3. ป้องกัน webhook
 
-ที่ Planner Webhook เลือก Header Auth สร้าง credential ที่ใช้ชื่อ header `X-Planner-Key` และค่าสุ่มยาวที่เก็บเป็นความลับ อย่าใช้รหัสผ่าน Google เป็นค่า header นี้
+ที่ node **รับคำขอจากหน้าเว็บ** เลือก Header Auth สร้าง credential ที่ใช้ชื่อ header `X-Planner-Key` และค่าสุ่มยาวที่เก็บเป็นความลับ อย่าใช้รหัสผ่าน Google เป็นค่า header นี้
 
 นำค่าเดียวกันไปใส่ N8N_AUTH_TOKEN ใน `.env.local` บนเครื่องผู้ใช้ ไฟล์นี้ถูก .gitignore และไม่ควรส่งอาจารย์หรือใส่ ZIP ที่เผยแพร่
 
@@ -34,7 +34,7 @@
 
 ## 4. เปิดใช้งานและเชื่อมหน้าจอ
 
-Publish workflow แล้วคัดลอก **Production URL** จาก Planner Webhook ตั้งค่า:
+Publish workflow แล้วคัดลอก **Production URL** จาก node **รับคำขอจากหน้าเว็บ** ตั้งค่า:
 
 ```dotenv
 PORT=8787
@@ -59,14 +59,16 @@ workflow `03_rule_verification.json` ใช้ Manual Trigger ทดสอบก
 
 ## เส้นทางข้อมูลใน workflow
 
-1. Planner Webhook รับ action และข้อมูลจากหน้าจอ
-2. Read products/inventory/policies/requests อ่านแต่ละแหล่งครั้งเดียว
-3. Validate and Plan ตรวจข้อมูล แยกกำกวม คำนวณ และตรวจรายการซ้ำ/revision
-4. Needs Write แยกคำขออ่าน/ข้อผิดพลาดออกจากคำขอเขียน
-5. Is New แยก append กับ update โดยใช้ request_id จับคู่
-6. Read Saved Proposal อ่านข้อมูลกลับ
-7. Verify Readback ตรวจ quantity, revision และ status ตรงกับที่บันทึก
-8. Respond ส่ง HTTP status และผลให้หน้าจอ
+1. **รับคำขอจากหน้าเว็บ** รับ action และข้อมูลจากหน้าจอ
+2. **อ่านข้อมูลสินค้า / อ่านข้อมูลสต็อก / อ่านเกณฑ์เติมสินค้า / อ่านใบเสนอเดิม** อ่านแต่ละแหล่งครั้งเดียว
+3. **ตรวจข้อมูลและคำนวณแผน** ตรวจข้อมูล แยกกำกวม คำนวณ และตรวจรายการซ้ำ/revision
+4. **คำขอต้องบันทึกหรือไม่** แยกคำขออ่าน/ข้อผิดพลาดออกจากคำขอเขียน
+5. **เป็นใบเสนอใหม่หรือไม่** แยกเพิ่มแถวกับแก้แถวเดิมโดยใช้ request_id
+6. **อ่านใบเสนอที่บันทึกแล้ว** อ่านข้อมูลกลับ
+7. **ยืนยันผลการบันทึก** ตรวจ quantity, revision และ status ให้ตรงกับที่บันทึก
+8. **ส่งผลกลับหน้าเว็บ** ส่ง HTTP status และผลให้หน้าจอ
+
+ชื่อ node ที่ Code node อ้างอิงต้องตรงกับชื่อใน workflow หากเปลี่ยนชื่อ ให้แก้การอ้างอิงใน Code node ที่เกี่ยวข้องพร้อมกัน มิฉะนั้น workflow อาจหยุดด้วย `Error in workflow`.
 
 ## ข้อผิดพลาดและการยืนยันผล
 

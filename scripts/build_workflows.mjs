@@ -31,7 +31,68 @@ for(const [op,y]of [['append',300],['update',520]]){
 add(w,'Read Saved Proposal','n8n-nodes-base.googleSheets',{...sheetBase('requests'),operation:'read'},[1950,350],4.7,{alwaysOutputData:true,executeOnce:true,onError:'continueRegularOutput'});
 add(w,'Verify Readback','n8n-nodes-base.code',{jsCode:`const p=$('Validate and Plan').first().json,expected=p.write.row;\nconst found=$input.all().map(i=>i.json).filter(r=>r.request_id===expected.request_id);\nif(found.length!==1||Number(found[0].quantity)!==Number(expected.quantity)||Number(found[0].revision)!==Number(expected.revision)||found[0].status!==expected.status) return [{json:{ok:false,http_status:503,error:{code:'readback_failed',message:'ยังยืนยันผลบันทึกไม่ได้ กรุณาค้นหารายการก่อนลองใหม่'}}}];\nreturn [{json:{ok:true,http_status:p.http_status,result:{...p.result,request:found[0],readback_verified:true}}}];`},[2160,350],2);edge(w,'Read Saved Proposal','Verify Readback');edge(w,'Verify Readback','Respond');
 add(w,'Service Unavailable','n8n-nodes-base.code',{jsCode:failCode},[1300,-180],2);edge(w,'Service Unavailable','Respond');
-add(w,'Read Me','n8n-nodes-base.stickyNote',{content:'## BaanDee Stock Planner\n1. Import the four CSV tabs into Google Sheets.\n2. Set Spreadsheet ID on all Google Sheets nodes.\n3. Select your existing Google Sheets credential on all nodes.\n4. Use a protected webhook before public use.\n5. Publish and set N8N_WEBHOOK_URL on the local UI.\nSingle-operator prototype: Sheets writes are not atomic.\nBusiness rules are generated from src/core.mjs; do not edit only the embedded copy.',height:330,width:470},[-50,-330],1);
+add(w,'Read Me','n8n-nodes-base.stickyNote',{content:'## ระบบวางแผนเติมสินค้า BaanDee\n1. นำเข้า CSV 4 ตารางลง Google Sheets: products, inventory, policies, requests\n2. ตั้ง Spreadsheet ID และเลือกบัญชี Google ที่มีสิทธิ์ใน node อ่าน/เขียนทุกจุด\n3. ตั้ง Header Auth ชื่อ X-Planner-Key และเก็บ token เป็นความลับ\n4. ตรวจ Production URL แล้วตั้ง N8N_WEBHOOK_URL ใน .env.local\n5. กด Publish หลังตรวจ node และข้อมูลเชื่อมต่อครบ\nระบบเป็นต้นแบบใช้ข้อมูลย้อนหลังและกฎที่ตรวจสอบได้ ไม่สั่งซื้อจริง\nผู้ใช้ทีละคน: Google Sheets ไม่มี transaction สำหรับคำขอพร้อมกัน\nกฎคำนวณอ้างอิง src/core.mjs; อย่าแก้เฉพาะโค้ดที่ฝังใน workflow',height:330,width:470},[-50,-330],1);
+const thaiNames={
+ 'Planner Webhook':'รับคำขอจากหน้าเว็บ',
+ 'Read products':'อ่านข้อมูลสินค้า',
+ 'Read inventory':'อ่านข้อมูลสต็อก',
+ 'Read policies':'อ่านเกณฑ์เติมสินค้า',
+ 'Read requests':'อ่านใบเสนอเดิม',
+ 'Validate and Plan':'ตรวจข้อมูลและคำนวณแผน',
+ 'Needs Write':'คำขอต้องบันทึกหรือไม่',
+ 'Respond':'ส่งผลกลับหน้าเว็บ',
+ 'Write Row':'เตรียมแถวสำหรับบันทึก',
+ 'Is New':'เป็นใบเสนอใหม่หรือไม่',
+ 'Create Proposal':'สร้างใบเสนอเติมสินค้า',
+ 'Update Proposal':'แก้ไขใบเสนอเติมสินค้า',
+ 'Read Saved Proposal':'อ่านใบเสนอที่บันทึกแล้ว',
+ 'Verify Readback':'ยืนยันผลการบันทึก',
+ 'Service Unavailable':'แจ้งบริการไม่พร้อม',
+ 'Read Me':'คู่มือการตั้งค่า'
+};
+const thaiNotes={
+ 'Planner Webhook':'รับคำขอจากหน้าเว็บ โดยตรวจ Header Auth ก่อนทำงาน',
+ 'Read products':'อ่านรหัสและรายละเอียดสินค้า',
+ 'Read inventory':'อ่านจำนวนคงเหลือและเวลาของข้อมูลสต็อก',
+ 'Read policies':'อ่านขั้นต่ำ เป้าหมาย และระยะเวลารอสินค้า',
+ 'Read requests':'อ่านใบเสนอเดิม เพื่อตรวจรายการซ้ำและข้อมูลล่าสุด',
+ 'Validate and Plan':'ตรวจคุณภาพข้อมูล ใช้กฎคำนวณ และเตรียมผลหรือรายการเขียน',
+ 'Needs Write':'แยกคำขออ่านอย่างเดียวออกจากคำขอสร้างหรือแก้ไข',
+ 'Respond':'ส่งผลและสถานะกลับให้หน้าเว็บ',
+ 'Write Row':'ส่งเฉพาะแถวใบเสนอที่ผ่านการตรวจไปยังขั้นตอนบันทึก',
+ 'Is New':'เลือกเพิ่มแถวใหม่หรือแก้แถวเดิมตาม request_id',
+ 'Create Proposal':'เพิ่มใบเสนอใหม่ลงแท็บ requests',
+ 'Update Proposal':'แก้ไขแถวเดิมในแท็บ requests โดยใช้ request_id',
+ 'Read Saved Proposal':'อ่านแถวที่เพิ่งบันทึกกลับมาตรวจสอบ',
+ 'Verify Readback':'ยืนยันจำนวน สถานะ และ revision ก่อนตอบว่าสำเร็จ',
+ 'Service Unavailable':'ส่งข้อความปลอดภัยเมื่อบริการหรือการบันทึกไม่พร้อม',
+ 'Read Me':'คำแนะนำตั้งค่า Google Sheets, Header Auth และ Production URL'
+};
+const rewriteRefs=value=>{
+ if(typeof value==='string'){
+  if(thaiNames[value])return thaiNames[value];
+  let out=value;
+  for(const [english,thai] of Object.entries(thaiNames)){
+   out=out.replaceAll(`$('${english}')`,`$('${thai}')`)
+     .replaceAll(`'${english}'`,`'${thai}'`)
+     .replaceAll(`"${english}"`,`"${thai}"`);
+  }
+  return out;
+ }
+ if(Array.isArray(value))return value.map(rewriteRefs);
+ if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,rewriteRefs(v)]));
+ return value;
+};
+for(const node of w.nodes){
+ const english=node.name;
+ node.name=thaiNames[english]??english;
+ if(node.type==='n8n-nodes-base.stickyNote')continue;
+ node.notes=thaiNotes[english]??'';
+ node.notesInFlow=true;
+ node.parameters=rewriteRefs(node.parameters);
+}
+w.connections=Object.fromEntries(Object.entries(w.connections).map(([name,outputs])=>[thaiNames[name]??name,rewriteRefs(outputs)]));
+w.name='ระบบวางแผนเติมสินค้า BaanDee - Google Sheets';
 fs.writeFileSync('workflows/01_stock_planner_google_sheets.json',JSON.stringify(w,null,2));
 const bridge=workflow('BaanDee Stock Planner - Local Bridge','BaanDeeLocalV1');
 add(bridge,'Planner Webhook','n8n-nodes-base.webhook',{httpMethod:'POST',path:'baandee-stock-planner-local',authentication:'headerAuth',responseMode:'responseNode',options:{}},[0,0],2,{webhookId:randomUUID()});

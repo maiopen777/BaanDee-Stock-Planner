@@ -1,0 +1,97 @@
+{
+  "tested_at": "2026-10-25T17:20:28.947Z",
+  "transport": "local HTTP + SQLite",
+  "results": [
+    {
+      "id": "I01 evaluate real data",
+      "input": "{\"action\":\"evaluate\",\"mode\":\"demo\",\"as_of\":\"2026-07-31T09:00:00+07:00\"}",
+      "expected": "{\"total\":82,\"needs_replenishment\":28,\"sufficient\":49,\"review\":5}",
+      "actual": "{\"total\":82,\"needs_replenishment\":28,\"sufficient\":49,\"review\":5}",
+      "result": "PASS"
+    },
+    {
+      "id": "I02 missing policy",
+      "input": "{\"action\":\"evaluate\",\"product_id\":\"SKU-0003\",\"mode\":\"demo\",\"as_of\":\"2026-07-31T09:00:00+07:00\"}",
+      "expected": "\"review\"",
+      "actual": "\"review\"",
+      "result": "PASS"
+    },
+    {
+      "id": "I03 unknown product",
+      "input": "{\"action\":\"evaluate\",\"product_id\":\"SKU-9999\",\"mode\":\"demo\",\"as_of\":\"2026-07-31T09:00:00+07:00\"}",
+      "expected": "404",
+      "actual": "404",
+      "result": "PASS"
+    },
+    {
+      "id": "I04 stale data blocks",
+      "input": "{\"action\":\"evaluate\",\"mode\":\"demo\",\"as_of\":\"2026-08-02T09:00:00+07:00\"}",
+      "expected": "82",
+      "actual": "82",
+      "result": "PASS"
+    },
+    {
+      "id": "I05 zero rejected",
+      "input": "{\"action\":\"create\",\"quantity\":0,\"actor\":\"ผู้ทดสอบ\"}",
+      "expected": "422",
+      "actual": "422",
+      "result": "PASS"
+    },
+    {
+      "id": "I06 create and verify readback",
+      "input": "{\"action\":\"create\",\"product_id\":\"SKU-0011\",\"quantity\":21,\"actor\":\"ผู้ทดสอบระบบ\",\"reason\":\"ทดสอบการเชื่อมระบบ\",\"idempotency_key\":\"dbb1f142-0173-4329-8b41-97bf718c1e29\",\"mode\":\"demo\",\"as_of\":\"2026-07-31T09:00:00+07:00\"}",
+      "expected": "{\"status\":201,\"qty\":21,\"verified\":true}",
+      "actual": "{\"status\":201,\"qty\":21,\"verified\":true}",
+      "result": "PASS"
+    },
+    {
+      "id": "I07 retrieve persisted row",
+      "input": "{\"action\":\"get\",\"request_id\":\"REQ-be1aac15-2d21-45e1-a171-f193c4b9b621\"}",
+      "expected": "21",
+      "actual": "21",
+      "result": "PASS"
+    },
+    {
+      "id": "I08 replay does not duplicate",
+      "input": "{\"action\":\"create\",\"product_id\":\"SKU-0011\",\"quantity\":21,\"actor\":\"ผู้ทดสอบระบบ\",\"reason\":\"ทดสอบการเชื่อมระบบ\",\"idempotency_key\":\"dbb1f142-0173-4329-8b41-97bf718c1e29\",\"mode\":\"demo\",\"as_of\":\"2026-07-31T09:00:00+07:00\"}",
+      "expected": "true",
+      "actual": "true",
+      "result": "PASS"
+    },
+    {
+      "id": "I09 update and verify readback",
+      "input": "{\"action\":\"update\",\"request_id\":\"REQ-be1aac15-2d21-45e1-a171-f193c4b9b621\",\"revision\":1,\"quantity\":20,\"status\":\"submitted\",\"actor\":\"ผู้ทดสอบระบบ\",\"reason\":\"ปรับตามพื้นที่จัดเก็บ\",\"mode\":\"demo\",\"as_of\":\"2026-07-31T09:00:00+07:00\"}",
+      "expected": "{\"quantity\":20,\"revision\":2,\"status\":\"submitted\",\"verified\":true}",
+      "actual": "{\"quantity\":20,\"revision\":2,\"status\":\"submitted\",\"verified\":true}",
+      "result": "PASS"
+    },
+    {
+      "id": "I10 stale revision rejected",
+      "input": "{\"action\":\"update\",\"request_id\":\"REQ-be1aac15-2d21-45e1-a171-f193c4b9b621\",\"revision\":1,\"quantity\":20,\"status\":\"submitted\",\"actor\":\"ผู้ทดสอบระบบ\",\"reason\":\"ปรับตามพื้นที่จัดเก็บ\",\"mode\":\"demo\",\"as_of\":\"2026-07-31T09:00:00+07:00\"}",
+      "expected": "409",
+      "actual": "409",
+      "result": "PASS"
+    },
+    {
+      "id": "I11 duplicate product prevented",
+      "input": "{\"action\":\"create\",\"product_id\":\"SKU-0011\",\"quantity\":21,\"actor\":\"ผู้ทดสอบระบบ\",\"reason\":\"ทดสอบการเชื่อมระบบ\",\"idempotency_key\":\"f6b860af-7440-4f67-87c3-f8f640ef1cfa\",\"mode\":\"demo\",\"as_of\":\"2026-07-31T09:00:00+07:00\"}",
+      "expected": "409",
+      "actual": "409",
+      "result": "PASS"
+    },
+    {
+      "id": "I12 cancel keeps history",
+      "input": "{\"action\":\"update\",\"request_id\":\"REQ-be1aac15-2d21-45e1-a171-f193c4b9b621\",\"revision\":2,\"quantity\":20,\"status\":\"cancelled\",\"actor\":\"ผู้ทดสอบระบบ\",\"reason\":\"จบกรณีทดสอบ\",\"mode\":\"demo\",\"as_of\":\"2026-07-31T09:00:00+07:00\"}",
+      "expected": "\"cancelled\"",
+      "actual": "\"cancelled\"",
+      "result": "PASS"
+    },
+    {
+      "id": "I13 saved edit still retrievable",
+      "input": "{\"action\":\"get\",\"request_id\":\"REQ-be1aac15-2d21-45e1-a171-f193c4b9b621\"}",
+      "expected": "20",
+      "actual": "20",
+      "result": "PASS"
+    }
+  ]
+}

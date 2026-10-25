@@ -1,0 +1,209 @@
+TAP version 13
+# Subtest: T01 below minimum: 5 < 10 recommends 30 - 5 = 25
+ok 1 - T01 below minimum: 5 < 10 recommends 30 - 5 = 25
+  ---
+  duration_ms: 2.2593
+  type: 'test'
+  ...
+# Subtest: T02 equality at minimum does not trigger
+ok 2 - T02 equality at minimum does not trigger
+  ---
+  duration_ms: 0.2765
+  type: 'test'
+  ...
+# Subtest: T03 missing policy blocks, never assumes zero
+ok 3 - T03 missing policy blocks, never assumes zero
+  ---
+  duration_ms: 0.1943
+  type: 'test'
+  ...
+# Subtest: T04 stale >24 hours blocks
+ok 4 - T04 stale >24 hours blocks
+  ---
+  duration_ms: 0.1655
+  type: 'test'
+  ...
+# Subtest: T05 exactly 24 hours is accepted
+ok 5 - T05 exactly 24 hours is accepted
+  ---
+  duration_ms: 0.1686
+  type: 'test'
+  ...
+# Subtest: T06 future stock timestamp blocks
+ok 6 - T06 future stock timestamp blocks
+  ---
+  duration_ms: 0.1722
+  type: 'test'
+  ...
+# Subtest: T07 unknown product returns 404
+ok 7 - T07 unknown product returns 404
+  ---
+  duration_ms: 0.4692
+  type: 'test'
+  ...
+# Subtest: T08 missing threshold quarantined
+ok 8 - T08 missing threshold quarantined
+  ---
+  duration_ms: 0.1768
+  type: 'test'
+  ...
+# Subtest: T09 target below minimum quarantined
+ok 9 - T09 target below minimum quarantined
+  ---
+  duration_ms: 0.1377
+  type: 'test'
+  ...
+# Subtest: T10 duplicate policy quarantines both
+ok 10 - T10 duplicate policy quarantines both
+  ---
+  duration_ms: 0.1965
+  type: 'test'
+  ...
+# Subtest: T11 SKU normalization and category correction preserve original
+ok 11 - T11 SKU normalization and category correction preserve original
+  ---
+  duration_ms: 0.1726
+  type: 'test'
+  ...
+# Subtest: T12 negative stock blocked
+ok 12 - T12 negative stock blocked
+  ---
+  duration_ms: 0.1207
+  type: 'test'
+  ...
+# Subtest: T13 duplicate inventory blocked instead of summing
+ok 13 - T13 duplicate inventory blocked instead of summing
+  ---
+  duration_ms: 0.1527
+  type: 'test'
+  ...
+# Subtest: T14 create returns exact evidence and draft
+ok 14 - T14 create returns exact evidence and draft
+  ---
+  duration_ms: 0.5283
+  type: 'test'
+  ...
+# Subtest: T15 zero, negative, fractional, NaN and boolean quantities rejected
+ok 15 - T15 zero, negative, fractional, NaN and boolean quantities rejected
+  ---
+  duration_ms: 0.3096
+  type: 'test'
+  ...
+# Subtest: T16 manual override requires reason
+ok 16 - T16 manual override requires reason
+  ---
+  duration_ms: 0.2007
+  type: 'test'
+  ...
+# Subtest: T17 override with explanation allowed
+ok 17 - T17 override with explanation allowed
+  ---
+  duration_ms: 0.1284
+  type: 'test'
+  ...
+# Subtest: T18 duplicate active proposal prevented
+ok 18 - T18 duplicate active proposal prevented
+  ---
+  duration_ms: 0.2018
+  type: 'test'
+  ...
+# Subtest: T19 repeated submission is idempotent
+ok 19 - T19 repeated submission is idempotent
+  ---
+  duration_ms: 0.1221
+  type: 'test'
+  ...
+# Subtest: T20 reused idempotency key with changed content is rejected
+ok 20 - T20 reused idempotency key with changed content is rejected
+  ---
+  duration_ms: 0.159
+  type: 'test'
+  ...
+# Subtest: T21 stale revision rejected
+ok 21 - T21 stale revision rejected
+  ---
+  duration_ms: 0.1714
+  type: 'test'
+  ...
+# Subtest: T22 cannot jump draft directly to approved
+ok 22 - T22 cannot jump draft directly to approved
+  ---
+  duration_ms: 0.1595
+  type: 'test'
+  ...
+# Subtest: T23 cancellation requires reason and keeps evidence
+ok 23 - T23 cancellation requires reason and keeps evidence
+  ---
+  duration_ms: 0.2031
+  type: 'test'
+  ...
+# Subtest: T24 live mode uses actual time even when historical as_of supplied
+ok 24 - T24 live mode uses actual time even when historical as_of supplied
+  ---
+  duration_ms: 0.1394
+  type: 'test'
+  ...
+# Subtest: T25 actual dataset counts and independent quantity calculation
+ok 25 - T25 actual dataset counts and independent quantity calculation
+  ---
+  duration_ms: 4.7228
+  type: 'test'
+  ...
+# Subtest: T26 SQLite create, reopen, update, reopen + audit history
+ok 26 - T26 SQLite create, reopen, update, reopen + audit history
+  ---
+  duration_ms: 15.4175
+  type: 'test'
+  ...
+# Subtest: T27 future policy does not apply early
+ok 27 - T27 future policy does not apply early
+  ---
+  duration_ms: 0.2285
+  type: 'test'
+  ...
+# Subtest: T28 invalid or timezone-free timestamp rejected
+ok 28 - T28 invalid or timezone-free timestamp rejected
+  ---
+  duration_ms: 0.1397
+  type: 'test'
+  ...
+# Subtest: T29 duplicate product ID quarantined
+ok 29 - T29 duplicate product ID quarantined
+  ---
+  duration_ms: 0.0896
+  type: 'test'
+  ...
+# Subtest: T30 get missing request is explicit failure
+ok 30 - T30 get missing request is explicit failure
+  ---
+  duration_ms: 0.1392
+  type: 'test'
+  ...
+# Subtest: T31 valid alphanumeric source SKUs are preserved
+ok 31 - T31 valid alphanumeric source SKUs are preserved
+  ---
+  duration_ms: 1.8317
+  type: 'test'
+  ...
+# Subtest: T32 exact exported n8n planner stops on source failure fixture
+ok 32 - T32 exact exported n8n planner stops on source failure fixture
+  ---
+  duration_ms: 1.6208
+  type: 'test'
+  ...
+# Subtest: T33 exported Google Sheets reads are execute-once
+ok 33 - T33 exported Google Sheets reads are execute-once
+  ---
+  duration_ms: 0.4147
+  type: 'test'
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 129.6982
+

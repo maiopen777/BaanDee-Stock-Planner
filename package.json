@@ -1,6 +1,6 @@
 {
   "name": "baandee-stock-planner",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "Thai student prototype: deterministic replenishment planning with n8n integration",
