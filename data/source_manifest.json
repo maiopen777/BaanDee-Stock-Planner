@@ -1,0 +1,16 @@
+{
+  "source_package": "BaanDee_Class1_Student_v1.0.zip",
+  "package_sha256": "e6d8840f72dbf305bc32c8595d5af31bb9f88a19b824f4bf5c548b85b425f0c5",
+  "files": [
+    {
+      "file": "data/raw/products.csv",
+      "sha256": "2d2a12e8c33a829a4cf909685cd8c1feedf7f8929289f01b09751fd96cd81cd5",
+      "unchanged_from_instructor": true
+    },
+    {
+      "file": "data/raw/inventory_snapshot.csv",
+      "sha256": "65c588f1c830dd761c74be1b6bf969b5fd593ce7988b95073608393d1139bfef",
+      "unchanged_from_instructor": true
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {writeCSV} from '../src/csv.mjs';
+const response=await fetch(process.env.N8N_WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'evaluate'}),signal:AbortSignal.timeout(15000)});
+assert.equal(response.status,403);
+const file='tests/results/cloud-integration.json';
+const report=JSON.parse(fs.readFileSync(file,'utf8'));
+report.results=report.results.filter(r=>r.id!=='I14 unauthenticated request blocked');
+report.results.push({id:'I14 unauthenticated request blocked',input:'POST evaluate without authentication header',expected:'403',actual:String(response.status),result:'PASS'});
+report.auth_retested_at=new Date().toISOString();
+fs.writeFileSync(file,JSON.stringify(report,null,2));writeCSV('tests/results/cloud-integration.csv',report.results);
+console.log('PASS I14: unauthenticated webhook request rejected with HTTP 403');

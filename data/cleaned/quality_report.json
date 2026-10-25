@@ -1,0 +1,160 @@
+{
+  "raw": {
+    "products": 82,
+    "inventory": 82,
+    "policies": 83
+  },
+  "clean": {
+    "products": 82,
+    "inventory": 82,
+    "policies": 77
+  },
+  "corrected": 10,
+  "quarantined": 6,
+  "issues": [
+    {
+      "source": "products",
+      "key": "SKU-0019",
+      "field": "category",
+      "before": "storage",
+      "after": "Storage",
+      "disposition": "corrected",
+      "rule": "explicit_category_dictionary"
+    },
+    {
+      "source": "products",
+      "key": "SKU-0023",
+      "field": "category",
+      "before": "Bed room",
+      "after": "Bedding",
+      "disposition": "corrected",
+      "rule": "explicit_category_dictionary"
+    },
+    {
+      "source": "products",
+      "key": "SKU-0038",
+      "field": "category",
+      "before": "kitchen",
+      "after": "Kitchen",
+      "disposition": "corrected",
+      "rule": "explicit_category_dictionary"
+    },
+    {
+      "source": "products",
+      "key": "SKU-0046",
+      "field": "category",
+      "before": "Bed room",
+      "after": "Bedding",
+      "disposition": "corrected",
+      "rule": "explicit_category_dictionary"
+    },
+    {
+      "source": "products",
+      "key": "SKU-0057",
+      "field": "category",
+      "before": "bedding",
+      "after": "Bedding",
+      "disposition": "corrected",
+      "rule": "explicit_category_dictionary"
+    },
+    {
+      "source": "products",
+      "key": "SKU-0069",
+      "field": "category",
+      "before": "Bed room",
+      "after": "Bedding",
+      "disposition": "corrected",
+      "rule": "explicit_category_dictionary"
+    },
+    {
+      "source": "products",
+      "key": "SKU-0076",
+      "field": "category",
+      "before": "bedding",
+      "after": "Bedding",
+      "disposition": "corrected",
+      "rule": "explicit_category_dictionary"
+    },
+    {
+      "source": "products",
+      "key": "SKU-KT-104",
+      "field": "category",
+      "before": "kitchen",
+      "after": "Kitchen",
+      "disposition": "corrected",
+      "rule": "explicit_category_dictionary"
+    },
+    {
+      "source": "products",
+      "key": "SKU-BD-220",
+      "field": "category",
+      "before": "Bed room",
+      "after": "Bedding",
+      "disposition": "corrected",
+      "rule": "explicit_category_dictionary"
+    },
+    {
+      "source": "policies",
+      "key": "SKU-0002",
+      "field": "product_id",
+      "before": " sku0002 ",
+      "after": "SKU-0002",
+      "disposition": "corrected",
+      "rule": "documented_sku_format"
+    },
+    {
+      "source": "policies",
+      "key": "SKU-9999",
+      "field": "product_id",
+      "before": "SKU-9999",
+      "after": "",
+      "disposition": "quarantined",
+      "rule": "unknown_product"
+    },
+    {
+      "source": "policies",
+      "key": "SKU-0003",
+      "field": "record",
+      "before": "{\"product_id\":\"SKU-0003\",\"minimum_qty\":\"\",\"target_qty\":\"30\",\"lead_time_days\":\"4\",\"effective_from\":\"2026-07-01\",\"source\":\"team_synthetic_v1\"}",
+      "after": "",
+      "disposition": "quarantined",
+      "rule": "missing_or_invalid_policy_values"
+    },
+    {
+      "source": "policies",
+      "key": "SKU-0004",
+      "field": "record",
+      "before": "{\"product_id\":\"SKU-0004\",\"minimum_qty\":\"15\",\"target_qty\":\"5\",\"lead_time_days\":\"5\",\"effective_from\":\"2026-07-01\",\"source\":\"team_synthetic_v1\"}",
+      "after": "",
+      "disposition": "quarantined",
+      "rule": "missing_or_invalid_policy_values"
+    },
+    {
+      "source": "policies",
+      "key": "SKU-0005",
+      "field": "record",
+      "before": "{\"product_id\":\"SKU-0005\",\"minimum_qty\":\"-1\",\"target_qty\":\"40\",\"lead_time_days\":\"6\",\"effective_from\":\"2026-07-01\",\"source\":\"team_synthetic_v1\"}",
+      "after": "",
+      "disposition": "quarantined",
+      "rule": "missing_or_invalid_policy_values"
+    },
+    {
+      "source": "policies",
+      "key": "SKU-0006",
+      "field": "record",
+      "before": "{\"product_id\":\"SKU-0006\",\"minimum_qty\":\"10\",\"target_qty\":\"30\",\"lead_time_days\":\"7\",\"effective_from\":\"2026-07-01\",\"source\":\"team_synthetic_v1\"}",
+      "after": "",
+      "disposition": "quarantined",
+      "rule": "duplicate_policy_requires_review"
+    },
+    {
+      "source": "policies",
+      "key": "SKU-0006",
+      "field": "record",
+      "before": "{\"product_id\":\"SKU-0006\",\"minimum_qty\":\"10\",\"target_qty\":\"99\",\"lead_time_days\":\"7\",\"effective_from\":\"2026-07-01\",\"source\":\"team_synthetic_v1\"}",
+      "after": "",
+      "disposition": "quarantined",
+      "rule": "duplicate_policy_requires_review"
+    }
+  ]
+}

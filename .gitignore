@@ -1,0 +1,11 @@
+node_modules/
+var/
+.env
+.env.local
+.env.*.local
+*.log
+*.sqlite*
+.DS_Store
+Thumbs.db
+__pycache__/
+.venv/

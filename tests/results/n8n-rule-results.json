@@ -1,0 +1,48 @@
+{
+  "status": "success",
+  "finished": true,
+  "results": [
+    {
+      "name": "source products",
+      "expected": 82,
+      "actual": 82,
+      "pass": true
+    },
+    {
+      "name": "replenish",
+      "expected": 28,
+      "actual": 28,
+      "pass": true
+    },
+    {
+      "name": "manual review",
+      "expected": 5,
+      "actual": 5,
+      "pass": true
+    },
+    {
+      "name": "SKU-0001 qty",
+      "expected": 30,
+      "actual": 30,
+      "pass": true
+    },
+    {
+      "name": "stale blocks",
+      "expected": 82,
+      "actual": 82,
+      "pass": true
+    },
+    {
+      "name": "unknown SKU",
+      "expected": 404,
+      "actual": 404,
+      "pass": true
+    },
+    {
+      "name": "zero quantity",
+      "expected": 422,
+      "actual": 422,
+      "pass": true
+    }
+  ]
+}

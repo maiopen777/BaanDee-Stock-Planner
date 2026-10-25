@@ -1,0 +1,15 @@
+{
+  "name": "baandee-stock-planner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Thai student prototype: deterministic replenishment planning with n8n integration",
+  "engines": {"node": ">=24.0.0"},
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node scripts/run_tests.mjs",
+    "prepare": "node scripts/prepare_data.mjs",
+    "workflows": "node scripts/build_workflows.mjs",
+    "verify:workflows": "node scripts/verify_workflows.mjs"
+  }
+}

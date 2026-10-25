@@ -1,0 +1,133 @@
+{
+  "name": "BaanDee Stock Planner - Local Bridge",
+  "id": "BaanDeeLocalV1",
+  "nodes": [
+    {
+      "id": "68888c2d-fb0d-4615-9e32-930fe00a8905",
+      "name": "Planner Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "baandee-stock-planner-local",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 2,
+      "webhookId": "e62e3390-4e8d-4861-b6c4-f7b0eaa45e25"
+    },
+    {
+      "id": "99ef429d-1418-4298-bfb0-f42d6195f3e0",
+      "name": "Planner Data API",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8788/api/action",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "position": [
+        300,
+        0
+      ],
+      "typeVersion": 4.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "0963f281-3108-458f-9b3b-14282a7885c0",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": "={{ $json.http_status || 200 }}"
+        }
+      },
+      "position": [
+        1740,
+        100
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "id": "1fed95b4-1cd3-401e-92d2-b26f7f7a9e25",
+      "name": "Service Unavailable",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "jsCode": "return [{json:{ok:false,http_status:503,error:{code:'service_unavailable',message:'เชื่อมต่อแหล่งข้อมูลหรือบันทึกไม่สำเร็จ ยังยืนยันผลไม่ได้ กรุณาค้นหารายการก่อนลองใหม่'}}}];"
+      },
+      "position": [
+        600,
+        200
+      ],
+      "typeVersion": 2
+    }
+  ],
+  "connections": {
+    "Planner Webhook": {
+      "main": [
+        [
+          {
+            "node": "Planner Data API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planner Data API": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Service Unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Service Unavailable": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false
+  },
+  "pinData": {},
+  "versionId": "0a56f4fe-e08d-4747-b05a-cb4418d60112",
+  "tags": []
+}
